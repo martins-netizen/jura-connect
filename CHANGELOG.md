@@ -6,6 +6,20 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- **Profile-backed milk-sensor alerts keep their canonical names**
+  ([#13](https://github.com/makefu/jura-connect/pull/13)). Every bundled
+  machine XML spells the three milk-sensor alerts parenthetically, and
+  mechanically snake-casing those labels produced
+  `no_milk_milk_sensor`, `error_milk_milk_sensor` and
+  `no_signal_milk_sensor` — duplicating or reordering "milk" against the
+  EF536 status codebook's `no_milk_sensor`, `milk_sensor_error` and
+  `milk_sensor_no_signal`. Exact-name consumers (the Home Assistant
+  integration among them) silently missed these alerts whenever a
+  profile was selected. `jura_connect.profile` now normalises the three
+  names while `AlertDef.raw_name` keeps the original XML spelling, so
+  profile metadata and blocked-product behaviour are unchanged.
+
 ## [0.13.0] — 2026-08-16
 
 Closes the gap against the official J.O.E. Android app
