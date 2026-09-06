@@ -6,6 +6,8 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.13.1] — 2026-09-06
+
 ### Fixed
 - **Profile-backed milk-sensor alerts keep their canonical names**
   ([#13](https://github.com/makefu/jura-connect/pull/13)). Every bundled
