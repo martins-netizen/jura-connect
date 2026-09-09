@@ -325,7 +325,7 @@ parameters. Complete list across all 89 profiles:
 
 | Arg | Tag | Lib |
 | --- | --- | --- |
-| `F2` | `GRINDER_RATIO` | encoded, **untested** |
+| `F2` | `GRINDER_RATIO` | ✅ live-verified on a GIGA 6 / EF566 (`00` = 100% left, `04` = 100% right) |
 | `F3` | `COFFEE_STRENGTH` | ✅ live-verified |
 | `F4` | `WATER_AMOUNT` | ✅ live-verified |
 | `F5` | `MILK_AMOUNT` | ✅ live-verified on a Z10 (EA) / EF545 |

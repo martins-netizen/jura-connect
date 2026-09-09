@@ -231,6 +231,20 @@ def test_schedule_then_clock_round_trip(timer_sim) -> None:
     assert s.recipe_hex[6:8] == "08"
 
 
+def test_schedule_brew_accepts_grinder_ratio(timer_sim) -> None:
+    c = _paired(timer_sim, "EF566")
+    try:
+        schedule = c.schedule_brew(
+            "espresso", delay=1800, grinder_ratio="0_100", sync_time=False
+        )
+    finally:
+        c.close()
+
+    assert schedule.accepted is True
+    assert schedule.recipe_hex == "02040809000002000100000000000000"
+    assert timer_sim.config.coffee_timer_blob == schedule.recipe_hex + "00000000"
+
+
 def test_send_clock_alone(timer_sim) -> None:
     c = _paired(timer_sim, "EF1091")
     try:

@@ -1596,6 +1596,7 @@ class JuraClient:
         milk_foam: int | None = None,
         milk_break: int | None = None,
         bypass: int | None = None,
+        grinder_ratio: int | str | None = None,
         preselections: Sequence[str] = (),
         preselect_mask: int | None = None,
         substring: bool = False,
@@ -1616,9 +1617,10 @@ class JuraClient:
         use XML units — ``ml`` for water, brew ``strength`` level,
         ``temperature`` as ITEM name (``"low"`` / ``"normal"`` /
         ``"high"``) or value, ``milk_foam`` / ``milk_break`` in seconds,
-        ``bypass`` in ml. Anything left ``None`` falls back to the XML
-        default for this product. Values are validated against the
-        machine XML before going on the wire.
+        ``bypass`` in ml, and ``grinder_ratio`` as an ITEM name
+        (``"100_0"`` … ``"0_100"`` on EF566) or value. Anything left
+        ``None`` falls back to the XML default for this product. Values
+        are validated against the machine XML before going on the wire.
 
         **Not live-verified — may misbrew, verify on your hardware:**
         ``bypass``, ``milk_foam`` and ``milk_break`` are encoded from
@@ -1683,6 +1685,7 @@ class JuraClient:
             (profile.KIND_MILK_FOAM_AMOUNT, milk_foam),
             (profile.KIND_MILK_BREAK, milk_break),
             (profile.KIND_BYPASS, bypass),
+            (profile.KIND_GRINDER_RATIO, grinder_ratio),
         ):
             if value is not None:
                 overrides[kind] = value
@@ -1870,6 +1873,7 @@ class JuraClient:
         milk_foam: int | None = None,
         milk_break: int | None = None,
         bypass: int | None = None,
+        grinder_ratio: int | str | None = None,
         overrides: dict[str, int | str] | None = None,
         substring: bool = False,
         sync_time: bool = True,
@@ -1946,6 +1950,7 @@ class JuraClient:
                 (profile.KIND_MILK_FOAM_AMOUNT, milk_foam),
                 (profile.KIND_MILK_BREAK, milk_break),
                 (profile.KIND_BYPASS, bypass),
+                (profile.KIND_GRINDER_RATIO, grinder_ratio),
             ):
                 if value is not None:
                     recipe_overrides[kind] = value

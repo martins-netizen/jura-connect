@@ -12,6 +12,9 @@ guesses — if a behaviour differs from this doc, fix the doc.
 Raw wire traces from hardware runs live in [`captures/`](captures/),
 one file per session. Claims below that cite a capture are backed by a
 verbatim frame log; claims marked *APK-derived* or *untested* are not.
+The EF566 grinder-ratio verification was a physical end-to-end
+observation without a raw trace and is documented separately in
+[`EF566_GRINDER_RATIO.md`](EF566_GRINDER_RATIO.md).
 
 | Capture | Machine | Covers |
 | ------- | ------- | ------ |
@@ -1377,11 +1380,18 @@ unused bytes are `0x00` and whose byte 8 is a constant `0x01`**:
   carries a parameter there (nothing uses `Argument="F9"`).
 * **Byte positions come from the machine XML.** Every PRODUCT element
   lists its parameters with an `Argument="F<n>"` attribute
-  (COFFEE_STRENGTH at F3, WATER_AMOUNT at F4, MILK_FOAM_AMOUNT at F6,
-  TEMPERATURE at F7, BYPASS at F10, MILK_BREAK at F11). The F-numbers
-  are the byte offsets of the *Bluetooth* start-product command, which
-  carries a leading key byte; the WiFi blob does not, so **blob offset
-  = F − 1**.
+  (GRINDER_RATIO at F2, COFFEE_STRENGTH at F3, WATER_AMOUNT at F4,
+  MILK_FOAM_AMOUNT at F6, TEMPERATURE at F7, BYPASS at F10,
+  MILK_BREAK at F11). The F-numbers are the byte offsets of the
+  *Bluetooth* start-product command, which carries a leading key byte;
+  the WiFi blob does not, so **blob offset = F − 1**.
+* **EF566 F2 is the left:right grinder ratio.** A GIGA 6 physically
+  brewed Espresso with both endpoint values: `100_0=00` moved beans
+  only in the left hopper, while `0_100=04` moved beans only in the
+  right hopper. Both brews completed normally. The profile's middle
+  choices are `75_25=01`, `50_50=02` and `25_75=03`; they follow the
+  same declared left:right scale but were not individually observed.
+  See [`EF566_GRINDER_RATIO.md`](EF566_GRINDER_RATIO.md).
 * **Water and bypass are sent in 5 ml ticks** (`ml / 5`, one byte).
   XML `Value`/`Min`/`Max` attributes are in ml. Milk foam and milk
   break are seconds, sent as-is; strength is the level number;
@@ -1424,11 +1434,11 @@ unused bytes are `0x00` and whose byte 8 is a constant `0x01`**:
   (bare `@tp`). With the correct 00-pad/byte-8=01 layout it brews on
   the first send, so the retry is usually moot.
 * **Untested variants — verify on your hardware.** Live end-to-end
-  verification exists only for single-boiler coffee machines (S8 EB /
-  EF1091 by the maintainer, E6 by the upstream PR author). **Twin
-  models** (e.g. J8/J10 "twin") and any product carrying a
-  `grinder_ratio` parameter are **untested** — their blob layout may
-  differ; report back if a brew is ACKed `@tp` but nothing pours.
+  verification covers single-boiler coffee machines (S8 EB / EF1091
+  by the maintainer, E6 by the upstream PR author) and the GIGA 6 /
+  EF566 grinder-ratio endpoints above. Other twin models remain
+  untested — their blob layout or physical orientation may differ;
+  report back if a brew is ACKed `@tp` but nothing pours.
 * The dongle serves **one TCP session at a time**. Back-to-back
   commands may hit a connection refusal for a moment after the previous
   session closes — wait briefly and retry.

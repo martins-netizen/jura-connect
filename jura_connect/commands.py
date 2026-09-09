@@ -504,6 +504,7 @@ _BREW_KEY_ALIASES = {
     "temp": profile.KIND_TEMPERATURE,
     "milk": profile.KIND_MILK_FOAM_AMOUNT,
     "milk_foam": profile.KIND_MILK_FOAM_AMOUNT,
+    "grinder": profile.KIND_GRINDER_RATIO,
 }
 _BREW_KEY_TO_KIND = {
     **_BREW_KEY_ALIASES,
@@ -603,10 +604,12 @@ def _r_brew(_spec, client, args, timeout):
 
 # -- products discovery -------------------------------------------------
 
-#: Recipe kinds whose blob byte is NOT confirmed against real hardware.
+#: Recipe kinds whose blob byte is not generally confirmed against hardware.
+#: EF566's grinder ratio is the profile-specific exception in ``_param_info``.
 _NOT_LIVE_VERIFIED_KINDS = frozenset(
     {
         profile.KIND_BYPASS,
+        profile.KIND_GRINDER_RATIO,
         profile.KIND_MILK_BREAK,
     }
 )
@@ -641,7 +644,8 @@ class ParamInfo:
     value_hex)`` in menu order); ranged params carry ``minimum`` /
     ``maximum`` / ``step`` with a ``unit`` and ``encoding`` note.
     ``live_verified`` is False for parameters whose wire byte has not
-    been confirmed on hardware (bypass / milk).
+    been confirmed on the selected profile (for example grinder ratio
+    outside EF566).
     """
 
     kind: str
@@ -792,13 +796,15 @@ class ProductCatalogue:
         }
 
 
-def _param_info(param) -> ParamInfo:
+def _param_info(param, *, machine_code: str) -> ParamInfo:
     kind = param.kind
     cli_keys = _cli_keys_for_kind(kind)
     # A param is overridable via `brew` only when it has a CLI key. Some
     # machine-reported params (e.g. milk_amount on the S8) have none.
     settable = bool(cli_keys)
-    live = kind not in _NOT_LIVE_VERIFIED_KINDS
+    live = kind not in _NOT_LIVE_VERIFIED_KINDS or (
+        kind == profile.KIND_GRINDER_RATIO and machine_code == "EF566"
+    )
     unit, encoding = _KIND_UNIT.get(kind, (None, None))
     if param.items:  # enumerated (strength / temperature)
         choices = tuple((it.name, it.value) for it in param.items)
@@ -881,7 +887,7 @@ def _r_products(_spec, client, _args, _timeout):
             code=p.code,
             name=p.name,
             raw_name=p.raw_name,
-            params=tuple(_param_info(pp) for pp in p.params),
+            params=tuple(_param_info(pp, machine_code=prof.code) for pp in p.params),
             preselections=tuple(sorted(p.preselections)),
             unsendable=_unsendable_preselections(prof, p),
             double_code=p.double_code,

@@ -452,6 +452,11 @@ KIND_MILK_AMOUNT = "milk_amount"
 KIND_MILK_FOAM_AMOUNT = "milk_foam_amount"
 KIND_MILK_BREAK = "milk_break"
 KIND_BYPASS = "bypass"
+#: ``Argument="F2"``. Twin-grinder profiles expose this as an
+#: enumerated left:right split (for example ``100_0=00`` through
+#: ``0_100=04`` on EF566). The two extreme values were live-verified on
+#: a GIGA 6 / EF566; see ``docs/EF566_GRINDER_RATIO.md``.
+KIND_GRINDER_RATIO = "grinder_ratio"
 #: ``Argument="F17"``. Unlike every other kind this one sits at blob
 #: offset 16, i.e. *past* the live-verified 16-byte layout — see
 #: :meth:`ProductDef.build_recipe_hex`, which grows the blob to 17
@@ -463,6 +468,7 @@ KIND_GRINDER_FREENESS = "grinder_freeness"
 #: All recipe-parameter kinds this library knows how to encode, in a
 #: stable order suitable for building UI (product code first is implicit).
 RECIPE_PARAM_KINDS: tuple[str, ...] = (
+    KIND_GRINDER_RATIO,
     KIND_COFFEE_STRENGTH,
     KIND_WATER_AMOUNT,
     KIND_TEMPERATURE,
