@@ -15,8 +15,9 @@ each area is, because that is the thing worth knowing before you point
 this at your machine.
 
 **Verified against physical hardware** (a JURA S8 EB / EF1091 running
-TT237W V06.11, plus an E6 for the brew blob and a Z10/EF545 for the milk
-parameters). The raw frames behind these rows are in
+TT237W V06.11, plus an E6 for the brew blob, a Z10/EF545 for the milk
+parameters, and a GIGA 6/EF566 for the twin-grinder ratio). The raw
+frames behind the captured rows are in
 [`docs/captures/`](docs/captures/):
 
 | Capability | Status |
@@ -28,6 +29,7 @@ parameters). The raw frames behind these rows are in
 | Per-machine profiles — 89 bundled XMLs from the J.O.E. APK; alert names + product codes are looked up per `EF_code` so a Cortado on an S8 EB names itself, not `0x2B=2` | ✓ |
 | Machine settings: single-setting read and checksummed write | ✓ |
 | Brewing by product name — `brew hotwater water=220 temp=high` — with water / strength / temperature / bypass overrides validated against the machine XML | ✓ ; the `@TP:` recipe-blob format is verified by physically brewing, see §5.9 of [`docs/PROTOCOL.md`](docs/PROTOCOL.md) |
+| Twin-grinder ratio (`GRINDER_RATIO`, F2) | ✓ on a GIGA 6 / EF566; `100_0=00` selects the left hopper only and `0_100=04` the right hopper only |
 | Product progress — `@TV:` decoding, `brew(follow=True)`, `progress` | ✓ **for the coffee path**: a whole `cafe_barista` decoded frame-for-frame (grind → water → bypass → `ENJOY`), percentage, product resolution. Milk, steam and the maintenance states are *not* covered — see the second table |
 | Live per-product limits (`@TM:60`) | ✓ ; seven products, checksum required and accepted |
 | Milk-cooler **status** read (`@HU?`) | ✓ ; `@hu:800` = no cooler connected. The *update* verb is untested |
@@ -521,17 +523,20 @@ refused: water_amount: 9999 is outside [25, 450]
 
 Parameter keys: `water`/`ml` (millilitres), `strength` (level),
 `temp`/`temperature` (`low` / `normal` / `high`), `milk` (seconds),
-`milk_break` (seconds), `bypass` (millilitres). Which parameters a
-product accepts comes from its machine-XML entry.
+`milk_break` (seconds), `bypass` (millilitres), and
+`grinder`/`grinder_ratio` (a profile item such as `100_0`, `50_50` or
+`0_100`). Which parameters a product accepts comes from its
+machine-XML entry.
 
 > **Bypass and milk overrides are not live-verified — they may
 > misbrew, so verify them on your hardware.** `bypass`, `milk`
 > (milk-foam) and `milk_break` are encoded from the XML (ml kinds ÷5
 > ticks, seconds as-is) but have not been confirmed against a physical
 > machine. Only water and temperature are live-verified.
-> **Twin models** (e.g. J8/J10 "twin") and any product with a
-> `grinder_ratio` parameter are untested — their blob layout may
-> differ. Machines whose dongle stays silent on UDP discovery need
+> `grinder_ratio` is end-to-end verified on a GIGA 6 / EF566: `100_0`
+> used only the left hopper and `0_100` only the right hopper. Other
+> twin models remain untested and may differ. Machines whose dongle
+> stays silent on UDP discovery need
 > `set-machine-type <name> <EF>` once before `products` / `brew` map to
 > the right catalogue instead of the EF536 baseline.
 

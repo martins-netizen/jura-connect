@@ -953,6 +953,35 @@ def test_brew_bypass_and_milk_overrides_reach_wire(sim) -> None:
     assert milk_reply.value.startswith("@an:error")  # type: ignore[union-attr]
 
 
+def test_brew_grinder_ratio_override_reaches_wire(sim) -> None:
+    """Both the public API and CLI accept EF566's live-verified F2 axis."""
+    from jura_connect.profile import load_profile
+
+    host, port = sim.address
+    client = JuraClient(
+        host,
+        port=port,
+        conn_id="grinder-ratio-tests",
+        auth_hash="",
+        profile=load_profile("EF566"),
+    )
+    assert client.pair(timeout=2.0).state == "CORRECT"
+    try:
+        assert client.brew("espresso", grinder_ratio="100_0", timeout=1.0).startswith(
+            "@an:error"
+        )
+        result = run_named(
+            client,
+            "brew",
+            ["espresso", "grinder=0_100"],
+            timeout=1.0,
+            allow_destructive=True,
+        )
+    finally:
+        client.close()
+    assert result.value.startswith("@an:error")  # type: ignore[union-attr]
+
+
 # ---- products: brew-input discovery ----------------------------------
 
 
@@ -1027,36 +1056,46 @@ def test_products_without_profile_is_refused(sim) -> None:
         c.close()
 
 
-def test_products_renders_non_overridable_param_read_only(sim) -> None:
-    """A param with no `brew` CLI alias (grinder_ratio on the EF0000)
-    must render under its kind name with a read-only annotation — never
-    a blank key column — and expose settable=False in to_dict()."""
-    c = _paired_with_profile(sim, "EF0000")
+def test_products_renders_grinder_ratio_as_live_verified_and_settable(sim) -> None:
+    """A twin profile advertises the same grinder axis `brew` accepts."""
+    c = _paired_with_profile(sim, "EF566")
     try:
         cat = run_named(c, "products", [], timeout=1.0).value
         espresso = next(p for p in cat.products if p.name == "espresso")  # 0x02
         ratio = next(pp for pp in espresso.params if pp.kind == "grinder_ratio")
-        # No CLI alias -> not settable via `brew`.
-        assert ratio.cli_keys == ()
-        assert ratio.settable is False
-        # The rendered row uses the kind name, not a blank column, and
-        # is annotated read-only.
+        assert ratio.cli_keys == ("grinder", "grinder_ratio")
+        assert ratio.settable is True
+        assert ratio.live_verified is True
+        assert ratio.choices == (
+            ("100_0", "00"),
+            ("75_25", "01"),
+            ("50_50", "02"),
+            ("25_75", "03"),
+            ("0_100", "04"),
+        )
         row = ratio.format()
-        assert row.split("default")[0].strip() == "grinder_ratio"
-        assert "read-only: not settable via 'brew'" in row
-        assert not row.startswith("     default")  # no empty key column
-        # Whole-product format shows it too.
-        assert "grinder_ratio" in espresso.format()
-        assert "read-only" in espresso.format()
-        # Structured output carries settable=False for this param.
+        assert row.split("default")[0].strip() == "grinder / grinder_ratio"
+        assert "read-only" not in row
+        assert "not live-verified" not in row
         d = espresso.to_dict()
         entry = next(pp for pp in d["params"] if pp["kind"] == "grinder_ratio")
-        assert entry["settable"] is False
-        assert entry["cli_keys"] == []
-        # A settable param (strength) still reports settable=True.
-        strength = next(pp for pp in espresso.params if pp.kind == "coffee_strength")
-        assert strength.settable is True
-        assert strength.to_dict()["settable"] is True
+        assert entry["settable"] is True
+        assert entry["cli_keys"] == ["grinder", "grinder_ratio"]
+        assert entry["live_verified"] is True
+    finally:
+        c.close()
+
+
+def test_products_warns_for_grinder_ratio_on_unverified_twin_profile(sim) -> None:
+    c = _paired_with_profile(sim, "EF0000")
+    try:
+        catalogue = run_named(c, "products", [], timeout=1.0).value
+        espresso = next(p for p in catalogue.products if p.name == "espresso")
+        ratio = next(pp for pp in espresso.params if pp.kind == "grinder_ratio")
+
+        assert ratio.settable is True
+        assert ratio.live_verified is False
+        assert "not live-verified" in ratio.format()
     finally:
         c.close()
 

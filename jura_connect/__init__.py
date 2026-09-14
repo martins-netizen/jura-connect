@@ -67,6 +67,7 @@ from .process import (
 from .profile import (
     KIND_BYPASS,
     KIND_COFFEE_STRENGTH,
+    KIND_GRINDER_RATIO,
     KIND_MILK_BREAK,
     KIND_MILK_AMOUNT,
     KIND_MILK_FOAM_AMOUNT,
@@ -125,6 +126,7 @@ __all__ = [
     "COMMANDS",
     "KIND_BYPASS",
     "KIND_COFFEE_STRENGTH",
+    "KIND_GRINDER_RATIO",
     "KIND_MILK_BREAK",
     "KIND_MILK_AMOUNT",
     "KIND_MILK_FOAM_AMOUNT",

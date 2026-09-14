@@ -259,6 +259,29 @@ def test_build_recipe_hex_encodes_milk_foam_and_milk_break_overrides():
         latte.build_recipe_hex({"milk_break": 99})  # Max=60
 
 
+def test_ef566_grinder_ratio_encodes_live_verified_extremes():
+    """EF566 F2 is the left:right grinder split observed on a GIGA 6."""
+    espresso = load_profile("EF566").product_by_code[0x02]
+    ratio = espresso.param("grinder_ratio")
+
+    assert ratio is not None
+    assert ratio.argument == 2
+    assert ratio.default == 2
+    assert [(item.name, item.value) for item in ratio.items] == [
+        ("100_0", "00"),
+        ("75_25", "01"),
+        ("50_50", "02"),
+        ("25_75", "03"),
+        ("0_100", "04"),
+    ]
+    assert espresso.build_recipe_hex({"grinder_ratio": "100_0"}) == (
+        "02000809000002000100000000000000"
+    )
+    assert espresso.build_recipe_hex({"grinder_ratio": "0_100"}) == (
+        "02040809000002000100000000000000"
+    )
+
+
 def test_build_recipe_hex_encodes_bypass_and_milk_foam_defaults():
     """Bypass (F10, ml ÷5 ticks) and milk-foam (F6, seconds) defaults
     from the XML are baked into the blob (NOT live-verified)."""

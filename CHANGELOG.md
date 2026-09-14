@@ -6,6 +6,13 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- **Twin-grinder ratios are a public, settable recipe parameter.**
+  `KIND_GRINDER_RATIO`, `brew(..., grinder_ratio=...)`, the `grinder`
+  CLI alias and coffee-timer override all use the enumerated F2 values
+  from the selected machine profile. The `100_0=00` and `0_100=04`
+  endpoints were physically verified as left:right on a GIGA 6 / EF566.
+
 ## [0.13.1] — 2026-09-06
 
 ### Fixed
