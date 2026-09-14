@@ -954,8 +954,24 @@ def test_brew_bypass_and_milk_overrides_reach_wire(sim) -> None:
 
 
 def test_brew_grinder_ratio_override_reaches_wire(sim) -> None:
-    """Both the public API and CLI accept EF566's live-verified F2 axis."""
+    """EF566's live-verified F2 axis encodes onto the right blob byte
+    through the CLI key->kind mapping the runner uses, and reaches the
+    wire via both the public API and the CLI."""
+    from jura_connect.commands import _BREW_KEY_TO_KIND
     from jura_connect.profile import load_profile
+
+    prof = load_profile("EF566")
+    espresso = prof.product_by_code[0x02]
+    assert espresso.param("grinder_ratio") is not None
+
+    def _blob_via_cli_keys(**cli_kwargs):
+        overrides = {_BREW_KEY_TO_KIND[k]: v for k, v in cli_kwargs.items()}
+        return espresso.build_recipe_hex(overrides)
+
+    # grinder -> GRINDER_RATIO (F2 -> byte 1): the live-verified
+    # endpoints 100_0=00 (left hopper) and 0_100=04 (right hopper).
+    assert _blob_via_cli_keys(grinder="100_0")[1 * 2 : 1 * 2 + 2] == "00"
+    assert _blob_via_cli_keys(grinder="0_100")[1 * 2 : 1 * 2 + 2] == "04"
 
     host, port = sim.address
     client = JuraClient(
@@ -1096,6 +1112,40 @@ def test_products_warns_for_grinder_ratio_on_unverified_twin_profile(sim) -> Non
         assert ratio.settable is True
         assert ratio.live_verified is False
         assert "not live-verified" in ratio.format()
+    finally:
+        c.close()
+
+
+def test_products_renders_non_overridable_param_read_only(sim) -> None:
+    """A param with no `brew` CLI alias (STROKE on the EF541 pot)
+    must render under its kind name with a read-only annotation — never
+    a blank key column — and expose settable=False in to_dict()."""
+    c = _paired_with_profile(sim, "EF541")
+    try:
+        cat = run_named(c, "products", [], timeout=1.0).value
+        pot = next(p for p in cat.products if p.name == "pot")  # 0x0C
+        stroke = next(pp for pp in pot.params if pp.kind == "stroke")
+        # No CLI alias -> not settable via `brew`.
+        assert stroke.cli_keys == ()
+        assert stroke.settable is False
+        # The rendered row uses the kind name, not a blank column, and
+        # is annotated read-only.
+        row = stroke.format()
+        assert row.split("default")[0].strip() == "stroke"
+        assert "read-only: not settable via 'brew'" in row
+        assert not row.startswith("     default")  # no empty key column
+        # Whole-product format shows it too.
+        assert "stroke" in pot.format()
+        assert "read-only" in pot.format()
+        # Structured output carries settable=False for this param.
+        d = pot.to_dict()
+        entry = next(pp for pp in d["params"] if pp["kind"] == "stroke")
+        assert entry["settable"] is False
+        assert entry["cli_keys"] == []
+        # A settable param (strength) still reports settable=True.
+        strength = next(pp for pp in pot.params if pp.kind == "coffee_strength")
+        assert strength.settable is True
+        assert strength.to_dict()["settable"] is True
     finally:
         c.close()
 

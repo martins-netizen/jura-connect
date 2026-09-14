@@ -894,7 +894,10 @@ class ProductDef:
 
         **Not live-verified — may misbrew, verify on your hardware:**
         the ``milk_break`` encoding is inferred from the XML (seconds,
-        sent as-is), not individually confirmed. Water, temperature,
+        sent as-is), not individually confirmed. ``grinder_ratio`` is
+        confirmed on the GIGA 6 / EF566 only (both hopper endpoints
+        physically brewed, docs/EF566_GRINDER_RATIO.md); on any other
+        profile its F2 byte is unconfirmed. Water, temperature,
         strength and bypass are live-verified on the S8 EB;
         ``milk_amount`` and ``milk_foam_amount`` are live-verified on a
         Z10 (EA) / EF545 (Milkcoffee blob

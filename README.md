@@ -29,7 +29,7 @@ frames behind the captured rows are in
 | Per-machine profiles — 89 bundled XMLs from the J.O.E. APK; alert names + product codes are looked up per `EF_code` so a Cortado on an S8 EB names itself, not `0x2B=2` | ✓ |
 | Machine settings: single-setting read and checksummed write | ✓ |
 | Brewing by product name — `brew hotwater water=220 temp=high` — with water / strength / temperature / bypass overrides validated against the machine XML | ✓ ; the `@TP:` recipe-blob format is verified by physically brewing, see §5.9 of [`docs/PROTOCOL.md`](docs/PROTOCOL.md) |
-| Twin-grinder ratio (`GRINDER_RATIO`, F2) | ✓ on a GIGA 6 / EF566; `100_0=00` selects the left hopper only and `0_100=04` the right hopper only |
+| Twin-grinder ratio (`GRINDER_RATIO`, F2) | ✓ on a GIGA 6 / EF566; `100_0=00` selects the left hopper only and `0_100=04` the right hopper only ; no raw trace — physical observation, see [`docs/EF566_GRINDER_RATIO.md`](docs/EF566_GRINDER_RATIO.md) |
 | Product progress — `@TV:` decoding, `brew(follow=True)`, `progress` | ✓ **for the coffee path**: a whole `cafe_barista` decoded frame-for-frame (grind → water → bypass → `ENJOY`), percentage, product resolution. Milk, steam and the maintenance states are *not* covered — see the second table |
 | Live per-product limits (`@TM:60`) | ✓ ; seven products, checksum required and accepted |
 | Milk-cooler **status** read (`@HU?`) | ✓ ; `@hu:800` = no cooler connected. The *update* verb is untested |
