@@ -605,7 +605,11 @@ def _r_brew(_spec, client, args, timeout):
 # -- products discovery -------------------------------------------------
 
 #: Recipe kinds whose blob byte is not generally confirmed against hardware.
-#: EF566's grinder ratio is the profile-specific exception in ``_param_info``.
+#: ``KIND_GRINDER_RATIO`` is the one kind with profile-specific
+#: exceptions: both endpoint values were physically brewed on a GIGA 6
+#: / EF566 (docs/EF566_GRINDER_RATIO.md). Its siblings (EF566V2,
+#: EF566UL, EF566ULV2) carry the identical F2 catalogue and can join
+#: the set once verified.
 _NOT_LIVE_VERIFIED_KINDS = frozenset(
     {
         profile.KIND_BYPASS,
@@ -613,6 +617,8 @@ _NOT_LIVE_VERIFIED_KINDS = frozenset(
         profile.KIND_MILK_BREAK,
     }
 )
+#: Machine codes whose grinder ratio (F2) is live-verified.
+_GRINDER_RATIO_LIVE_VERIFIED_CODES = frozenset({"EF566"})
 _NOT_LIVE_VERIFIED_CAVEAT = "not live-verified — may misbrew, verify on your hardware"
 
 #: kind -> (unit label, wire-encoding note) for ranged parameters.
@@ -803,7 +809,8 @@ def _param_info(param, *, machine_code: str) -> ParamInfo:
     # machine-reported params (e.g. milk_amount on the S8) have none.
     settable = bool(cli_keys)
     live = kind not in _NOT_LIVE_VERIFIED_KINDS or (
-        kind == profile.KIND_GRINDER_RATIO and machine_code == "EF566"
+        kind == profile.KIND_GRINDER_RATIO
+        and machine_code in _GRINDER_RATIO_LIVE_VERIFIED_CODES
     )
     unit, encoding = _KIND_UNIT.get(kind, (None, None))
     if param.items:  # enumerated (strength / temperature)

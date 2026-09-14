@@ -1625,7 +1625,10 @@ class JuraClient:
         **Not live-verified — may misbrew, verify on your hardware:**
         ``bypass``, ``milk_foam`` and ``milk_break`` are encoded from
         the XML (ml ÷5 ticks, seconds as-is) but not confirmed on a
-        physical machine. Water and temperature are live-verified.
+        physical machine. ``grinder_ratio`` is confirmed on the GIGA 6
+        / EF566 only (both hopper endpoints physically brewed); on any
+        other profile its F2 byte is unconfirmed and may misbrew. Water
+        and temperature are live-verified.
 
         The wire format is a 16-byte blob (verified live on an E8 (EB)
         / EF538): byte 0 is the product code; each XML parameter lands
